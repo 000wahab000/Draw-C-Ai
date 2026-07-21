@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Draw Grid Capture Tool</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Draw Grid Data Collector</h1>
+        <p>Draw your shapes here. The grid is 32x32 pixels.</p>
+
+        <!-- Controls for selecting the class -->
+        <div class="controls">
+            <label for="class-select">Select Class:</label>
+            <select id="class-select">
+                <option value="smile">Smile</option>
+                <option value="square">Square</option>
+                <option value="triangle">Triangle</option>
+                <option value="heart">Heart</option>
+                <option value="fire">Fire</option>
+                <option value="thumbs_up">Thumbs up</option>
+                <option value="zap">Zap</option>
+                <option value="x">X</option>
+            </select>
+        </div>
+
+        <!-- The Canvas where drawing happens -->
+        <div class="canvas-container">
+            <canvas id="draw-canvas" width="320" height="320"></canvas>
+            <p class="hint">Canvas is visually 320x320, but logically 32x32.</p>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="actions">
+            <button id="clear-btn" class="btn">Clear Canvas</button>
+            <button id="save-btn" class="btn btn-primary">Save Vector (JSON)</button>
+        </div>
+        
+        <div id="status" class="status-message"></div>
+    </div>
+
+    <!-- Link the JavaScript file -->
+    <script src="script.js"></script>
+</body>
+</html>
