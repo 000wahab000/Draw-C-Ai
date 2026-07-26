@@ -1,11 +1,16 @@
 import os
 
-def get_next_dataset_dir(base_path="dataset"):
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+def get_next_dataset_dir(base_path=None):
     """
     Finds the next available dataset version directory.
     If 'dataset_v1' exists, it returns 'dataset_v2', and so on.
     This guarantees we never silently overwrite previous data.
     """
+    if base_path is None:
+        base_path = os.path.join(PROJECT_ROOT, "dataset")
+
     version = 1
     while True:
         # Construct folder name like 'dataset_v1'

@@ -131,7 +131,9 @@ def process_augmentations(dataset_version_dir, augmentations_per_file=10):
 if __name__ == "__main__":
     # To run this, you must specify WHICH dataset version you want to augment.
     # For now, let's just find the highest version folder and use it.
-    datasets = glob.glob("dataset_v*")
+    PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    dataset_pattern = os.path.join(PROJECT_ROOT, "dataset_v*")
+    datasets = glob.glob(dataset_pattern)
     if not datasets:
         print("No dataset directories found! Run fetch_lucide_icons.py first.")
     else:
