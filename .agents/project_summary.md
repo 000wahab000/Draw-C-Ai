@@ -56,29 +56,28 @@ Draw-C-Ai/
 ├── .agents/
 │   └── AGENTS.md              ← Ponytail rule (always active)
 ├── Dataset-v1/                ← 8 raw SVGs, pre-script stash, NOT processed yet
+├── dataset_v2/                ← first real processed dataset
+│   ├── raw/                   ← one JSON per raw sample
+│   ├── augmented/             ← 10-15x augmented JSONs
+│   └── dataset_info.json      ← metadata, commit this
+├── test_set/                  ← sacred fixed test set, never train on these
 ├── src/
 │   ├── capture-tool/
 │   │   ├── index.html         ← 32×32 draw grid, working
 │   │   ├── script.js          ← captures and exports vector as JSON
 │   │   └── style.css
-│   └── scripts/
-│       ├── fetch_lucide_icons.py   ← downloads SVGs, converts to 32×32 binary JSON
-│       ├── augment_data.py         ← rotation/shift/noise/stroke augmentation
-│       └── dataset_manager.py     ← versioned directory creation (never overwrites)
-├── requirements.txt           ← numpy, opencv-python, Pillow, cairosvg (add to, never remove)
-└── .gitignore
-
-# TARGET (to be created by execution agents):
-├── dataset_v2/                ← first real processed dataset
-│   ├── raw/                   ← one JSON per raw sample
-│   ├── augmented/             ← 10-15x augmented JSONs
-│   └── dataset_info.json      ← metadata, commit this
-├── classifiers/
-│   ├── knn_pixel.py
-│   └── knn_embedding.py
-├── train/
-│   ├── prepare_data.py
-│   └── cnn_model.py
+│   ├── scripts/
+│   │   ├── fetch_lucide_icons.py   ← downloads SVGs, converts to 32×32 binary JSON
+│   │   ├── augment_data.py         ← rotation/shift/noise/stroke augmentation
+│   │   └── dataset_manager.py     ← versioned directory creation (never overwrites)
+│   ├── classifiers/
+│   │   ├── knn_pixel.py
+│   │   └── knn_embedding.py
+│   ├── api/
+│   │   └── app.py             ← FastAPI, single /predict endpoint, mode-routed
+│   └── train/
+│       ├── prepare_data.py
+│       └── cnn_model.py
 ├── models/
 │   ├── cnn_v1.onnx
 │   ├── vit_v1.pth             ← checkpoints from Colab/Kaggle
@@ -86,14 +85,14 @@ Draw-C-Ai/
 ├── embeddings/
 │   ├── embeddings_v1.npy
 │   └── labels_v1.npy
-├── api/
-│   └── app.py                 ← FastAPI, single /predict endpoint, mode-routed
 ├── logs/
 │   ├── phase2_failures.md
 │   ├── v1_vs_v2_comparison.md
 │   └── architecture_comparison.md
-└── docs/
-    └── retrospective.md
+├── docs/
+│   └── retrospective.md
+├── requirements.txt           ← numpy, opencv-python, Pillow, PyMuPDF, fastapi, uvicorn
+└── .gitignore
 ```
 
 ---

@@ -38,7 +38,7 @@
 - [x] Shift (±3px)
 - [x] Noise (salt & pepper 1%)
 - [x] Stroke width jitter (dilate/erode)
-- [ ] Fix the `__main__` block in `augment_data.py` — it looks for `dataset_v*` in cwd, not project root
+- [x] Fix the `__main__` block in `augment_data.py` — it looks for `dataset_v*` in cwd, not project root
 - [ ] Add: horizontal flip (for asymmetric icons, label-preserve only where valid — e.g. "x" and "square" are flip-safe, "thumbs_up" is not)
 - [ ] Add: brightness/contrast jitter (multiply pixel values, simulate faint vs bold strokes)
 - [ ] Target multiplier: 10–20x per raw file → with 20 raw files/class × 15x = 300 samples/class = 2400 total
@@ -55,16 +55,16 @@
 ## Phase 2 — V1: Raw Pixel Nearest Neighbor
 
 ### 2.1 Classifier Core
-- [ ] Write `classifiers/knn_pixel.py`:
+- [x] Write `classifiers/knn_pixel.py`:
   - `load_dataset(aug_dir)` → returns `(X: np.ndarray [N, 1024], y: list[str])`
   - `predict(query_vector, X, y, k=5)` → returns top-k `[(label, distance)]`
   - Distance: Euclidean first (simpler), expose cosine as a flag
   - No classes, no abstractions — just two functions
-- [ ] Write `test_knn_pixel.py` — load dataset, pick 5 random samples, predict, print results
+- [x] Write `test_knn_pixel.py` — load dataset, pick 5 random samples, predict, print results
 - [ ] Log failures: for each wrong prediction, save `{query_label}_vs_{predicted_label}_{timestamp}.json` to `logs/failures/`
 
 ### 2.2 API Endpoint (Phase 2 version)
-- [ ] Write `api/app.py` (FastAPI):
+- [x] Write `api/app.py` (FastAPI):
   - `POST /predict` — accepts `{"vector": [1024 floats], "mode": "pixel_knn"}` → returns `{"label": str, "confidence": float, "top_k": [...]}`
   - `GET /health` — returns `{"status": "ok"}`
   - Load dataset on startup (in-memory, it's tiny)
