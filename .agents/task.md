@@ -65,14 +65,17 @@
 
 ### 2.2 API Endpoint (Phase 2 version)
 - [x] Write `api/app.py` (FastAPI):
-  - `POST /predict` — accepts `{"vector": [1024 floats], "mode": "pixel_knn"}` → returns `{"label": str, "confidence": float, "top_k": [...]}`
+  - `POST /predict` — accepts `{"vector": [1024 floats], "mode": "pixel_knn", "include_all_classes": false}` → returns `{"label": str, "confidence": float, "top_k": [...]}`
   - `GET /health` — returns `{"status": "ok"}`
   - Load dataset on startup (in-memory, it's tiny)
+- [ ] Add `include_all_classes` flag to `/predict`: when `false` (default) returns top-3 only (fast). When `true` aggregates scores across all 8 classes and returns `all_classes: {label: percentage}`. **Never call with `true` automatically — only on explicit user request.**
 - [ ] Test with `curl` or a tiny HTML test page before wiring to portfolio
 
 ### 2.3 End-to-End Test
 - [ ] Draw → capture → POST to local API → display result in the capture tool UI
+- [ ] Show "Show breakdown" button below the prediction result — clicking it fires a second POST with `include_all_classes: true` and renders the percentage bar list
 - [ ] Document: which classes get confused and why (log to `logs/phase2_failures.md`)
+
 
 ---
 

@@ -157,24 +157,57 @@ The FastAPI app must allow requests from `https://<username>.github.io`. Without
 ```json
 {
   "vector": [0, 1, 0, ...],
-  "mode": "pixel_knn"
+  "mode": "pixel_knn",
+  "include_all_classes": false
 }
 ```
 **Available modes**: `pixel_knn`, `embedding_knn`, `cnn`, `vit`, `convnext`
 
-**Response**:
+**`include_all_classes` flag** (default: `false`):
+- `false` → fast default path. Returns top-3 nearest neighbors only. This is what every draw triggers.
+- `true` → on-demand breakdown path. Aggregates scores across all 8 classes and returns percentage distribution. Only called when the user explicitly requests the full breakdown (e.g. clicks "Show breakdown" in the UI). Never call this automatically — it costs more compute and defeats the purpose.
+
+**Default response** (`include_all_classes: false`):
 ```json
 {
   "label": "heart",
   "confidence": 0.94,
   "top_k": [
     {"label": "heart", "score": 0.94},
-    {"label": "smile", "score": 0.04}
+    {"label": "smile", "score": 0.04},
+    {"label": "square", "score": 0.02}
   ],
-  "mode": "cnn",
+  "mode": "pixel_knn",
   "inference_ms": 12
 }
 ```
+
+**Breakdown response** (`include_all_classes: true`):
+```json
+{
+  "label": "heart",
+  "confidence": 0.94,
+  "top_k": [
+    {"label": "heart", "score": 0.94},
+    {"label": "smile", "score": 0.04},
+    {"label": "square", "score": 0.02}
+  ],
+  "all_classes": {
+    "heart": 42.1,
+    "smile": 23.5,
+    "x": 18.2,
+    "triangle": 8.1,
+    "fire": 4.3,
+    "square": 2.1,
+    "zap": 1.2,
+    "thumbs_up": 0.5
+  },
+  "mode": "pixel_knn",
+  "inference_ms": 18
+}
+```
+
+**UI contract**: Show the top prediction immediately on draw. Render a "Show breakdown" button below it. Clicking that button fires a second POST with `include_all_classes: true` and renders the percentage bar list. Do NOT fire it automatically.
 
 ### `GET /health`
 ```json
