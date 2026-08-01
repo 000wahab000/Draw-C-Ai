@@ -6,6 +6,47 @@
 
 ---
 
+## Phase 0 — Project Restructure (do this before any other phase work)
+
+> Moving from scattered `src/` layout to station-based layout. See `project_summary.md` → Migration Map for the full file move list.
+
+### 0.1 Create new directory skeleton
+- [ ] Create `data/raw/` and `data/scripts/`
+- [ ] Create `KNN/data/raw/`, `KNN/data/augmented/`, `KNN/embeddings/`, `KNN/logs/`
+- [ ] Create `CNN/data/augmented/`, `CNN/weights/`, `CNN/logs/`
+- [ ] Create `ViT/data/augmented/`, `ViT/weights/`, `ViT/logs/`
+- [ ] Create `ConvNeXt/data/augmented/`, `ConvNeXt/weights/`, `ConvNeXt/logs/`
+- [ ] Create `capture-tool/` at root
+- [ ] Create `api/` at root
+
+### 0.2 Move files (follow Migration Map in project_summary.md exactly)
+- [ ] `Dataset-v1/*.svg` → `data/raw/`
+- [ ] `dataset_v2/raw/*.json` → `KNN/data/raw/`
+- [ ] `dataset_v2/augmented/*.json` → `KNN/data/augmented/`
+- [ ] `src/capture-tool/*` → `capture-tool/`
+- [ ] `src/classifiers/knn_pixel.py` → `KNN/knn_pixel.py`
+- [ ] `src/classifiers/test_knn_pixel.py` → `KNN/test_knn_pixel.py`
+- [ ] `src/api/app.py` → `api/app.py`
+- [ ] `src/scripts/fetch_lucide_icons.py` → `data/scripts/fetch_lucide_icons.py`
+- [ ] `src/scripts/dataset_manager.py` → `data/scripts/dataset_manager.py`
+- [ ] `src/scripts/augment_data.py` → `KNN/augment.py`
+- [ ] `logs/phase2_failures.md` → `KNN/logs/phase2_failures.md`
+
+### 0.3 Fix all broken import paths
+- [ ] `api/app.py` — update import from `src.classifiers.knn_pixel` → `KNN.knn_pixel`
+- [ ] `KNN/test_knn_pixel.py` — update `PROJECT_ROOT` and import paths
+- [ ] `KNN/knn_pixel.py` — check for any path references
+- [ ] `data/scripts/fetch_lucide_icons.py` — update import of `dataset_manager`
+
+### 0.4 Clean up
+- [ ] Delete empty `src/` directory once all files are moved and imports verified
+- [ ] Delete empty `dataset_v2/` once files are moved to `KNN/`
+- [ ] Delete empty `Dataset-v1/` once SVGs are moved to `data/raw/`
+- [ ] Verify API still starts: `uvicorn api.app:app --reload` from project root
+- [ ] Verify KNN test still runs: `python KNN/test_knn_pixel.py` from project root
+
+---
+
 ## Phase 1 — Data Pipeline (the actual hard part)
 
 ### 1.1 Capture Tool (already ~80% done)

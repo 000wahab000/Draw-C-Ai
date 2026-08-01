@@ -49,51 +49,105 @@ The API accepts the raw vector from the browser. Internally, different models pr
 
 ---
 
-## Directory Structure (Current + Target)
+## Directory Structure (Station Model)
+
+> Each ML approach owns its station. Shared raw material lives in `data/`. Nothing crosses station boundaries — no model reads another model's augmented data.
 
 ```
 Draw-C-Ai/
-├── .agents/
-│   └── AGENTS.md              ← Ponytail rule (always active)
-├── Dataset-v1/                ← 8 raw SVGs, pre-script stash, NOT processed yet
-├── dataset_v2/                ← first real processed dataset
-│   ├── raw/                   ← one JSON per raw sample
-│   ├── augmented/             ← 10-15x augmented JSONs
-│   └── dataset_info.json      ← metadata, commit this
-├── test_set/                  ← sacred fixed test set, never train on these
-├── src/
-│   ├── capture-tool/
-│   │   ├── index.html         ← 32×32 draw grid, working
-│   │   ├── script.js          ← captures and exports vector as JSON
-│   │   └── style.css
-│   ├── scripts/
-│   │   ├── fetch_lucide_icons.py   ← downloads SVGs, converts to 32×32 binary JSON
-│   │   ├── augment_data.py         ← rotation/shift/noise/stroke augmentation
-│   │   └── dataset_manager.py     ← versioned directory creation (never overwrites)
-│   ├── classifiers/
-│   │   ├── knn_pixel.py
-│   │   └── knn_embedding.py
-│   ├── api/
-│   │   └── app.py             ← FastAPI, single /predict endpoint, mode-routed
-│   └── train/
-│       ├── prepare_data.py
-│       └── cnn_model.py
-├── models/
-│   ├── cnn_v1.onnx
-│   ├── vit_v1.pth             ← checkpoints from Colab/Kaggle
-│   └── README.md              ← which dataset version each model was trained on
-├── embeddings/
-│   ├── embeddings_v1.npy
-│   └── labels_v1.npy
+│
+├── .agents/                  ← AI planning docs (shared by all agents)
+│
+├── data/                     ← Data center — shared raw source material only
+│   ├── raw/                  ← Base JSONs from SVGs (binary 0/1) + original SVGs
+│   └── scripts/              ← fetch_lucide_icons.py, dataset_manager.py
+│
+├── test_set/                 ← SACRED. 16 files. Shared by ALL models. Never train on these.
+│
+├── capture-tool/             ← Shared frontend drawing tool (32×32 grid)
+│   ├── index.html
+│   ├── script.js
+│   └── style.css
+│
+├── KNN/                      ← KNN station
+│   ├── data/
+│   │   ├── raw/              ← 8 processed base JSONs (pulled from data/raw/)
+│   │   └── augmented/        ← KNN's own augmented files (binary 0/1)
+│   ├── augment.py            ← KNN's augmentation script (light: rotation, shift, noise)
+│   ├── knn_pixel.py          ← Euclidean distance over raw 1024-pixel vectors
+│   ├── knn_embedding.py      ← Distance over MobileNetV2 embeddings
+│   ├── test_knn_pixel.py     ← Evaluates against test_set/
+│   ├── embeddings/
+│   │   ├── embeddings_v1.npy
+│   │   └── labels_v1.npy
+│   └── logs/
+│       ├── phase2_failures.md
+│       └── v1_vs_v2_comparison.md
+│
+├── CNN/                      ← CNN station
+│   ├── data/
+│   │   └── augmented/        ← CNN's own augmented data (can be 0-255 grayscale)
+│   ├── augment.py            ← CNN's augmentation script (heavier than KNN's)
+│   ├── model.py              ← Architecture definition
+│   ├── train.py              ← Training loop
+│   ├── prepare_data.py       ← Train/val/test split (70/15/15, stratified)
+│   ├── weights/
+│   │   └── cnn_v1.onnx       ← Exported ONNX model
+│   └── logs/
+│       ├── confusion_matrix.png
+│       └── training_curve.png
+│
+├── ViT/                      ← Vision Transformer station
+│   ├── data/
+│   │   └── augmented/        ← ViT's own augmented data (upsampled to 224×224)
+│   ├── augment.py
+│   ├── model.py              ← vit_tiny_patch16_224 via timm
+│   ├── train.py
+│   ├── weights/
+│   │   └── vit_v1.pth
+│   └── logs/
+│
+├── ConvNeXt/                 ← ConvNeXt station
+│   ├── data/
+│   │   └── augmented/
+│   ├── augment.py
+│   ├── model.py              ← convnext_tiny via timm
+│   ├── train.py
+│   ├── weights/
+│   │   └── convnext_v1.pth
+│   └── logs/
+│
+├── api/
+│   └── app.py                ← ONE shared FastAPI, mode-routed (pixel_knn → cnn → vit → convnext)
+│
 ├── logs/
-│   ├── phase2_failures.md
-│   ├── v1_vs_v2_comparison.md
-│   └── architecture_comparison.md
+│   └── architecture_comparison.md  ← Cross-model results table
 ├── docs/
 │   └── retrospective.md
-├── requirements.txt           ← numpy, opencv-python, Pillow, PyMuPDF, fastapi, uvicorn
+├── requirements.txt
 └── .gitignore
 ```
+
+## Migration Map (from old `src/` structure)
+
+| Old path | New path |
+|---|---|
+| `Dataset-v1/` (SVGs) | `data/raw/` |
+| `dataset_v2/raw/` (8 JSONs) | `KNN/data/raw/` |
+| `dataset_v2/augmented/` (72 files) | `KNN/data/augmented/` |
+| `src/capture-tool/` | `capture-tool/` |
+| `src/classifiers/knn_pixel.py` | `KNN/knn_pixel.py` |
+| `src/classifiers/knn_embedding.py` | `KNN/knn_embedding.py` |
+| `src/classifiers/test_knn_pixel.py` | `KNN/test_knn_pixel.py` |
+| `src/api/app.py` | `api/app.py` |
+| `src/scripts/fetch_lucide_icons.py` | `data/scripts/fetch_lucide_icons.py` |
+| `src/scripts/dataset_manager.py` | `data/scripts/dataset_manager.py` |
+| `src/scripts/augment_data.py` | `KNN/augment.py` (KNN owns it now) |
+| `src/train/` | `CNN/` |
+| `models/` | `CNN/weights/`, `ViT/weights/`, `ConvNeXt/weights/` |
+| `embeddings/` | `KNN/embeddings/` |
+
+
 
 ---
 
