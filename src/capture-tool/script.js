@@ -10,6 +10,8 @@ const clearBtn = document.getElementById('clear-btn');
 const saveBtn = document.getElementById('save-btn');
 const classSelect = document.getElementById('class-select');
 const statusDiv = document.getElementById('status');
+const predictBtn = document.getElementById('predict-btn');
+const predictionResult = document.getElementById('prediction-result');
 
 // Our logical grid size is 32x32.
 // Since our canvas is visually 320x320, each logical pixel is visually 10x10.
@@ -149,6 +151,43 @@ saveBtn.addEventListener('click', () => {
 
     // Clear canvas for the next drawing
     setTimeout(clearCanvas, 1000);
+});
+
+predictBtn.addEventListener('click', async () => {
+    const flattenedVector = gridData.flat();
+    
+    predictionResult.innerText = "Predicting...";
+    predictionResult.style.color = "blue";
+    
+    try {
+        const response = await fetch("http://localhost:8000/predict", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                vector: flattenedVector,
+                mode: "pixel_knn"
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.error) {
+            predictionResult.innerText = `Error: ${data.error}`;
+            predictionResult.style.color = "red";
+        } else {
+            predictionResult.innerText = `Prediction: ${data.label} (Conf: ${(data.confidence * 100).toFixed(1)}%) in ${data.inference_ms}ms`;
+            predictionResult.style.color = "green";
+        }
+    } catch (error) {
+        predictionResult.innerText = `Failed to connect to API: ${error.message}`;
+        predictionResult.style.color = "red";
+    }
 });
 
 // Initialize with a clean state

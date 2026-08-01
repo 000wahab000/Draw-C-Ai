@@ -1,7 +1,7 @@
 import os
 import json
 import urllib.request
-import cairosvg
+import fitz
 from PIL import Image, ImageOps
 import numpy as np
 
@@ -43,7 +43,11 @@ def download_and_process_icon(class_name, lucide_name, output_dir):
     # 2. Convert the SVG to a PNG image
     temp_png = f"temp_{lucide_name}.png"
     # We output a 320x320 PNG first so we get a good clean render
-    cairosvg.svg2png(url=temp_svg, write_to=temp_png, output_width=320, output_height=320)
+    # Convert the SVG to a PNG image using PyMuPDF (fitz)
+    doc = fitz.open(temp_svg)
+    pix = doc[0].get_pixmap(matrix=fitz.Matrix(10, 10)) # Scale 10x for a clean render
+    pix.save(temp_png)
+    doc.close()
     
     # 3. Open the image using Pillow (Python Imaging Library)
     img = Image.open(temp_png).convert("RGBA")
