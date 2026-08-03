@@ -13,7 +13,7 @@ body {
     background: white;
     padding: 30px;
     border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
     text-align: center;
     max-width: 500px;
 }
@@ -46,9 +46,10 @@ select {
 canvas {
     border: 2px solid #bdc3c7;
     border-radius: 8px;
-    cursor: crosshair; /* Changes mouse to a plus sign for drawing */
+    cursor: crosshair;
+    /* Changes mouse to a plus sign for drawing */
     background-color: white;
-    box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.05);
 }
 
 .hint {
