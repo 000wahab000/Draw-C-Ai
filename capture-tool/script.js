@@ -153,11 +153,17 @@ saveBtn.addEventListener('click', () => {
     setTimeout(clearCanvas, 1000);
 });
 
+const breakdownSection = document.getElementById('breakdown-section');
+const breakdownBtn = document.getElementById('breakdown-btn');
+const breakdownResult = document.getElementById('breakdown-result');
+
 predictBtn.addEventListener('click', async () => {
     const flattenedVector = gridData.flat();
     
     predictionResult.innerText = "Predicting...";
     predictionResult.style.color = "blue";
+    breakdownSection.style.display = 'none';
+    breakdownResult.innerHTML = '';
     
     try {
         const response = await fetch("http://localhost:8000/predict", {
@@ -167,13 +173,12 @@ predictBtn.addEventListener('click', async () => {
             },
             body: JSON.stringify({
                 vector: flattenedVector,
-                mode: "pixel_knn"
+                mode: "pixel_knn",
+                include_all_classes: false
             })
         });
         
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         
         const data = await response.json();
         
@@ -183,10 +188,55 @@ predictBtn.addEventListener('click', async () => {
         } else {
             predictionResult.innerText = `Prediction: ${data.label} (Conf: ${(data.confidence * 100).toFixed(1)}%) in ${data.inference_ms}ms`;
             predictionResult.style.color = "green";
+            breakdownSection.style.display = 'block';
         }
     } catch (error) {
         predictionResult.innerText = `Failed to connect to API: ${error.message}`;
         predictionResult.style.color = "red";
+    }
+});
+
+breakdownBtn.addEventListener('click', async () => {
+    const flattenedVector = gridData.flat();
+    breakdownBtn.innerText = "Loading...";
+    breakdownBtn.disabled = true;
+    
+    try {
+        const response = await fetch("http://localhost:8000/predict", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                vector: flattenedVector,
+                mode: "pixel_knn",
+                include_all_classes: true
+            })
+        });
+        
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        
+        const data = await response.json();
+        if (data.error) throw new Error(data.error);
+        
+        let html = '';
+        for (const [label, percent] of Object.entries(data.all_classes)) {
+            html += `
+                <div class="breakdown-row">
+                    <div class="breakdown-label">${label}</div>
+                    <div class="breakdown-bar-bg">
+                        <div class="breakdown-bar-fill" style="width: ${percent}%;"></div>
+                    </div>
+                    <div class="breakdown-percent">${percent.toFixed(1)}%</div>
+                </div>
+            `;
+        }
+        breakdownResult.innerHTML = html;
+        breakdownBtn.style.display = 'none'; // hide button after showing
+        
+    } catch (error) {
+        breakdownResult.innerHTML = `<span style="color:red">Error: ${error.message}</span>`;
+    } finally {
+        breakdownBtn.innerText = "Show breakdown";
+        breakdownBtn.disabled = false;
     }
 });
 

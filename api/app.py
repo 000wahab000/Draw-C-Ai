@@ -8,10 +8,10 @@ from pydantic import BaseModel
 from typing import List
 
 # Adjust path so we can import from classifiers
-PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(PROJECT_ROOT)
 
-from src.classifiers.knn_pixel import load_dataset, predict
+from KNN.knn_pixel import load_dataset, predict, get_all_classes_breakdown
 
 app = FastAPI(title="Draw-C-AI API")
 
@@ -29,10 +29,11 @@ DATASET_X = None
 DATASET_Y = None
 
 def get_latest_dataset():
-    datasets = glob.glob(os.path.join(PROJECT_ROOT, "dataset_v*"))
-    if not datasets:
+    # In station-based layout, KNN dataset is in KNN/data
+    dataset_dir = os.path.join(PROJECT_ROOT, "KNN", "data")
+    if not os.path.exists(dataset_dir):
         return None
-    return sorted(datasets)[-1]
+    return dataset_dir
 
 @app.on_event("startup")
 async def startup_event():
@@ -51,6 +52,7 @@ async def startup_event():
 class PredictRequest(BaseModel):
     vector: List[int]
     mode: str = "pixel_knn"
+    include_all_classes: bool = False
 
 @app.get("/health")
 def health_check():
@@ -71,12 +73,17 @@ def predict_endpoint(req: PredictRequest):
         
         inference_ms = round((time.time() - start_time) * 1000, 2)
         
-        return {
+        response_data = {
             "label": best["label"],
             "confidence": best["score"],
             "top_k": top_k,
             "mode": req.mode,
             "inference_ms": inference_ms
         }
+        
+        if req.include_all_classes:
+            response_data["all_classes"] = get_all_classes_breakdown(req.vector, DATASET_X, DATASET_Y)
+            
+        return response_data
     else:
         return {"error": f"Mode '{req.mode}' not implemented yet."}

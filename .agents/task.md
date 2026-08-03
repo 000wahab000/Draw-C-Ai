@@ -11,39 +11,39 @@
 > Moving from scattered `src/` layout to station-based layout. See `project_summary.md` → Migration Map for the full file move list.
 
 ### 0.1 Create new directory skeleton
-- [ ] Create `data/raw/` and `data/scripts/`
-- [ ] Create `KNN/data/raw/`, `KNN/data/augmented/`, `KNN/embeddings/`, `KNN/logs/`
-- [ ] Create `CNN/data/augmented/`, `CNN/weights/`, `CNN/logs/`
-- [ ] Create `ViT/data/augmented/`, `ViT/weights/`, `ViT/logs/`
-- [ ] Create `ConvNeXt/data/augmented/`, `ConvNeXt/weights/`, `ConvNeXt/logs/`
-- [ ] Create `capture-tool/` at root
-- [ ] Create `api/` at root
+- [x] Create `data/raw/` and `data/scripts/`
+- [x] Create `KNN/data/raw/`, `KNN/data/augmented/`, `KNN/embeddings/`, `KNN/logs/`
+- [x] Create `CNN/data/augmented/`, `CNN/weights/`, `CNN/logs/`
+- [x] Create `ViT/data/augmented/`, `ViT/weights/`, `ViT/logs/`
+- [x] Create `ConvNeXt/data/augmented/`, `ConvNeXt/weights/`, `ConvNeXt/logs/`
+- [x] Create `capture-tool/` at root
+- [x] Create `api/` at root
 
 ### 0.2 Move files (follow Migration Map in project_summary.md exactly)
-- [ ] `Dataset-v1/*.svg` → `data/raw/`
-- [ ] `dataset_v2/raw/*.json` → `KNN/data/raw/`
-- [ ] `dataset_v2/augmented/*.json` → `KNN/data/augmented/`
-- [ ] `src/capture-tool/*` → `capture-tool/`
-- [ ] `src/classifiers/knn_pixel.py` → `KNN/knn_pixel.py`
-- [ ] `src/classifiers/test_knn_pixel.py` → `KNN/test_knn_pixel.py`
-- [ ] `src/api/app.py` → `api/app.py`
-- [ ] `src/scripts/fetch_lucide_icons.py` → `data/scripts/fetch_lucide_icons.py`
-- [ ] `src/scripts/dataset_manager.py` → `data/scripts/dataset_manager.py`
-- [ ] `src/scripts/augment_data.py` → `KNN/augment.py`
-- [ ] `logs/phase2_failures.md` → `KNN/logs/phase2_failures.md`
+- [x] `Dataset-v1/*.svg` → `data/raw/`
+- [x] `dataset_v2/raw/*.json` → `KNN/data/raw/`
+- [x] `dataset_v2/augmented/*.json` → `KNN/data/augmented/`
+- [x] `src/capture-tool/*` → `capture-tool/`
+- [x] `src/classifiers/knn_pixel.py` → `KNN/knn_pixel.py`
+- [x] `src/classifiers/test_knn_pixel.py` → `KNN/test_knn_pixel.py`
+- [x] `src/api/app.py` → `api/app.py`
+- [x] `src/scripts/fetch_lucide_icons.py` → `data/scripts/fetch_lucide_icons.py`
+- [x] `src/scripts/dataset_manager.py` → `data/scripts/dataset_manager.py`
+- [x] `src/scripts/augment_data.py` → `KNN/augment.py`
+- [x] `logs/phase2_failures.md` → `KNN/logs/phase2_failures.md`
 
 ### 0.3 Fix all broken import paths
-- [ ] `api/app.py` — update import from `src.classifiers.knn_pixel` → `KNN.knn_pixel`
-- [ ] `KNN/test_knn_pixel.py` — update `PROJECT_ROOT` and import paths
-- [ ] `KNN/knn_pixel.py` — check for any path references
-- [ ] `data/scripts/fetch_lucide_icons.py` — update import of `dataset_manager`
+- [x] `api/app.py` — update import from `src.classifiers.knn_pixel` → `KNN.knn_pixel`
+- [x] `KNN/test_knn_pixel.py` — update `PROJECT_ROOT` and import paths
+- [x] `KNN/knn_pixel.py` — check for any path references
+- [x] `data/scripts/fetch_lucide_icons.py` — update import of `dataset_manager`
 
 ### 0.4 Clean up
-- [ ] Delete empty `src/` directory once all files are moved and imports verified
-- [ ] Delete empty `dataset_v2/` once files are moved to `KNN/`
-- [ ] Delete empty `Dataset-v1/` once SVGs are moved to `data/raw/`
-- [ ] Verify API still starts: `uvicorn api.app:app --reload` from project root
-- [ ] Verify KNN test still runs: `python KNN/test_knn_pixel.py` from project root
+- [x] Delete empty `src/` directory once all files are moved and imports verified
+- [x] Delete empty `dataset_v2/` once files are moved to `KNN/`
+- [x] Delete empty `Dataset-v1/` once SVGs are moved to `data/raw/`
+- [x] Verify API still starts: `uvicorn api.app:app --reload` from project root
+- [x] Verify KNN test still runs: `python KNN/test_knn_pixel.py` from project root
 
 ---
 
@@ -109,13 +109,13 @@
   - `POST /predict` — accepts `{"vector": [1024 floats], "mode": "pixel_knn", "include_all_classes": false}` → returns `{"label": str, "confidence": float, "top_k": [...]}`
   - `GET /health` — returns `{"status": "ok"}`
   - Load dataset on startup (in-memory, it's tiny)
-- [ ] Add `include_all_classes` flag to `/predict`: when `false` (default) returns top-3 only (fast). When `true` aggregates scores across all 8 classes and returns `all_classes: {label: percentage}`. **Never call with `true` automatically — only on explicit user request.**
-- [ ] Test with `curl` or a tiny HTML test page before wiring to portfolio
+- [x] Add `include_all_classes` flag to `/predict`: when `false` (default) returns top-3 only (fast). When `true` aggregates scores across all 8 classes and returns `all_classes: {label: percentage}`. **Never call with `true` automatically — only on explicit user request.**
+- [x] Test with `curl` or a tiny HTML test page before wiring to portfolio
 
 ### 2.3 End-to-End Test
-- [ ] Draw → capture → POST to local API → display result in the capture tool UI
-- [ ] Show "Show breakdown" button below the prediction result — clicking it fires a second POST with `include_all_classes: true` and renders the percentage bar list
-- [ ] Document: which classes get confused and why (log to `logs/phase2_failures.md`)
+- [x] Draw → capture → POST to local API → display result in the capture tool UI
+- [x] Show "Show breakdown" button below the prediction result — clicking it fires a second POST with `include_all_classes: true` and renders the percentage bar list
+- [x] Document: which classes get confused and why (log to `logs/phase2_failures.md`)
 
 
 ---

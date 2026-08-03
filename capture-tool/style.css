@@ -95,3 +95,50 @@ canvas {
     color: #27ae60;
     min-height: 20px;
 }
+
+.btn-secondary {
+    background-color: #95a5a6;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background-color: #7f8c8d;
+}
+
+/* Breakdown Bars */
+.breakdown-container {
+    text-align: left;
+    margin-top: 10px;
+}
+
+.breakdown-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 6px;
+    font-size: 14px;
+}
+
+.breakdown-label {
+    width: 80px;
+    font-weight: 500;
+}
+
+.breakdown-bar-bg {
+    flex-grow: 1;
+    background-color: #ecf0f1;
+    border-radius: 4px;
+    height: 16px;
+    overflow: hidden;
+    margin: 0 10px;
+}
+
+.breakdown-bar-fill {
+    background-color: #3498db;
+    height: 100%;
+}
+
+.breakdown-percent {
+    width: 45px;
+    text-align: right;
+    color: #7f8c8d;
+}

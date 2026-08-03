@@ -5,6 +5,22 @@ __pycache__/
 env/
 venv/
 .DS_Store
-dataset_v*/raw/
-dataset_v*/augmented/
+# Test sets
 test_set/
+
+# Phase 0 Station Model Data
+# Ignore all generated JSON files in the individual model stations
+KNN/data/raw/
+KNN/data/augmented/
+CNN/data/raw/
+CNN/data/augmented/
+ViT/data/raw/
+ViT/data/augmented/
+ConvNeXt/data/raw/
+ConvNeXt/data/augmented/
+
+# Model Weights & Embeddings
+KNN/embeddings/
+CNN/weights/
+ViT/weights/
+ConvNeXt/weights/

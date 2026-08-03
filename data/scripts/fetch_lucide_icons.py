@@ -5,6 +5,9 @@ import fitz
 from PIL import Image, ImageOps
 import numpy as np
 
+import sys
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
 # We import the directory management function we just wrote!
 from dataset_manager import get_next_dataset_dir, setup_dataset_directories
 

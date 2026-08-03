@@ -1,6 +1,6 @@
 # Phase 2 — Pixel KNN Failure Analysis
 
-**Dataset**: dataset_v2 (72 training samples)
+**Dataset**: data (72 training samples)
 **Test set**: 16 samples (2 per class)
 **Accuracy**: 12/16 = 75.0%
 

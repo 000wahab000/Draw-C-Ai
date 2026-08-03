@@ -131,14 +131,11 @@ def process_augmentations(dataset_version_dir, augmentations_per_file=10):
 if __name__ == "__main__":
     # To run this, you must specify WHICH dataset version you want to augment.
     # For now, let's just find the highest version folder and use it.
-    PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    dataset_pattern = os.path.join(PROJECT_ROOT, "dataset_v*")
-    datasets = glob.glob(dataset_pattern)
-    if not datasets:
+    PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    latest_dataset = os.path.join(PROJECT_ROOT, "KNN", "data")
+    if not os.path.exists(latest_dataset):
         print("No dataset directories found! Run fetch_lucide_icons.py first.")
     else:
-        # Sort to find the latest (e.g., dataset_v2 > dataset_v1)
-        latest_dataset = sorted(datasets)[-1]
         print(f"Augmenting data in: {latest_dataset}")
         
         # Create 10 augmentations per raw file

@@ -3,16 +3,16 @@ import sys
 import glob
 import json
 
-PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(PROJECT_ROOT)
 
-from src.classifiers.knn_pixel import load_dataset, predict
+from KNN.knn_pixel import load_dataset, predict
 
 def get_latest_dataset():
-    datasets = glob.glob(os.path.join(PROJECT_ROOT, "dataset_v*"))
-    if not datasets:
+    dataset_dir = os.path.join(PROJECT_ROOT, "KNN", "data")
+    if not os.path.exists(dataset_dir):
         return None
-    return sorted(datasets)[-1]
+    return dataset_dir
 
 if __name__ == "__main__":
     # Load training data
@@ -69,7 +69,7 @@ if __name__ == "__main__":
     print(f"\nAccuracy: {correct}/{total} = {acc:.1f}%")
 
     # Write failure log
-    log_dir = os.path.join(PROJECT_ROOT, "logs")
+    log_dir = os.path.join(PROJECT_ROOT, "KNN", "logs")
     os.makedirs(log_dir, exist_ok=True)
     log_path = os.path.join(log_dir, "phase2_failures.md")
 

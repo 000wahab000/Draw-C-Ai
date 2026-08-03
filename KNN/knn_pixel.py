@@ -57,3 +57,41 @@ def predict(query_vector, X, y, k=5):
         })
         
     return results
+
+def get_all_classes_breakdown(query_vector, X, y):
+    """
+    Returns percentage distribution of scores using a Nearest Centroid approach.
+    Instead of summing all samples, we find the average "center" of each class's cluster
+    and calculate the distance to those centers for a much cleaner percentage breakdown.
+    """
+    query = np.array(query_vector, dtype=np.float32)
+    
+    # 1. Group by class and calculate the 'Average' drawing (Centroid)
+    class_centroids = {}
+    classes = set(y)
+    y_arr = np.array(y)
+    
+    for c in classes:
+        class_X = X[y_arr == c]
+        centroid = np.mean(class_X, axis=0)
+        class_centroids[c] = centroid
+        
+    # 2. Calculate distance from your drawing to each of the 8 Centroids
+    class_scores = {}
+    for c, centroid in class_centroids.items():
+        dist = np.linalg.norm(centroid - query)
+        # Convert distance to a confidence score
+        score = 1.0 / (1.0 + float(dist))
+        class_scores[c] = score
+        
+    # 3. Normalize into percentages
+    total = sum(class_scores.values())
+    if total == 0: return {}
+    
+    all_classes = {
+        label: round((score / total) * 100, 1) 
+        for label, score in class_scores.items()
+    }
+    
+    # Sort from highest to lowest
+    return dict(sorted(all_classes.items(), key=lambda item: item[1], reverse=True))
