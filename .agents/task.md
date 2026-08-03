@@ -6,6 +6,24 @@
 
 ---
 
+## 🔴 HOTFIX — Fix these BEFORE any other work
+
+> Live bugs found during user testing on 2026-08-03. Fix in order.
+
+### HF-1: "Show breakdown" button disappears permanently after first use
+**File**: `capture-tool/script.js`
+**Root cause**: `breakdownBtn.style.display = 'none'` is set inside the breakdown click handler but never reset to `'block'` when the user clicks Predict again. The button vanishes forever after first use.
+**Fix**: In the `predictBtn` click handler, alongside `breakdownResult.innerHTML = ''`, also add `breakdownBtn.style.display = 'block'` to restore the button for the next round.
+- [x] Fix `breakdownBtn` display reset in `capture-tool/script.js`
+- [x] Verify: draw → predict → breakdown button appears → click it → draw again → predict again → breakdown button appears again
+
+### HF-2: Top prediction label disagrees with breakdown percentages
+**Files**: `KNN/knn_pixel.py`, `api/app.py`
+**Root cause**: `predict()` uses old raw-sample KNN math (vs all 80 samples). `get_all_classes_breakdown()` uses new centroid math (vs 8 cluster centers). They return different top labels. Screenshot showed: predict said "triangle" but breakdown showed "x" at 14.5% highest.
+**Fix (Option B — simplest)**: In `api/app.py`, when handling a predict request, always call `get_all_classes_breakdown()` internally. Pick the label with the highest percentage as the top result. This makes both the label and the bars consistent with the same math.
+- [x] Update `api/app.py` to derive the top label from centroid breakdown, not from old `predict()`
+- [x] Verify: draw an X → top label says "x" AND the bars show "x" as highest
+
 ## Phase 0 — Project Restructure (do this before any other phase work)
 
 > Moving from scattered `src/` layout to station-based layout. See `project_summary.md` → Migration Map for the full file move list.
