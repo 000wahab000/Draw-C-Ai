@@ -49,11 +49,14 @@ function clearCanvas() {
 function getGridCoordinates(event) {
     const rect = canvas.getBoundingClientRect();
 
-    // Calculate raw mouse position inside the canvas element
-    const rawX = event.clientX - rect.left;
-    const rawY = event.clientY - rect.top;
+    // Compute actual scale: CSS may resize the canvas visually, so we can't
+    // use the hardcoded PIXEL_SCALE. We derive the ratio from the real rect.
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
 
-    // Convert to 32x32 grid space by dividing by the scale factor (10)
+    const rawX = (event.clientX - rect.left) * scaleX;
+    const rawY = (event.clientY - rect.top) * scaleY;
+
     const gridX = Math.floor(rawX / PIXEL_SCALE);
     const gridY = Math.floor(rawY / PIXEL_SCALE);
 
@@ -100,9 +103,10 @@ canvas.addEventListener('mouseup', () => {
     isDrawing = false;
 });
 
-canvas.addEventListener('mouseleave', () => {
-    isDrawing = false;
-});
+// Stop drawing when mouse leaves the canvas OR the entire window.
+// This prevents a stuck "isDrawing" state if the user drags outside.
+canvas.addEventListener('mouseleave', () => { isDrawing = false; });
+window.addEventListener('mouseup', () => { isDrawing = false; });
 
 // --- Actions ---
 
@@ -164,6 +168,7 @@ predictBtn.addEventListener('click', async () => {
     predictionResult.style.color = "blue";
     breakdownSection.style.display = 'none';
     breakdownResult.innerHTML = '';
+    breakdownBtn.style.display = 'inline-block'; // HF-1 fix: reset the button display
     
     try {
         const response = await fetch("http://localhost:8000/predict", {

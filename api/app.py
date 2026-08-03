@@ -66,23 +66,25 @@ def predict_endpoint(req: PredictRequest):
         if DATASET_X is None:
             return {"error": "Dataset not loaded"}
             
-        top_k = predict(req.vector, DATASET_X, DATASET_Y, k=3)
+        # HF-2 Fix: Use centroid math as the single source of truth for predictions
+        breakdown = get_all_classes_breakdown(req.vector, DATASET_X, DATASET_Y)
         
-        # Best prediction is the first one
-        best = top_k[0]
+        # Extract the highest scoring class from the centroid breakdown
+        top_label = list(breakdown.keys())[0]
+        # Convert the percentage (e.g. 14.5) back to a 0.0-1.0 confidence score (0.145)
+        top_confidence = breakdown[top_label] / 100.0
         
         inference_ms = round((time.time() - start_time) * 1000, 2)
         
         response_data = {
-            "label": best["label"],
-            "confidence": best["score"],
-            "top_k": top_k,
+            "label": top_label,
+            "confidence": top_confidence,
             "mode": req.mode,
             "inference_ms": inference_ms
         }
         
         if req.include_all_classes:
-            response_data["all_classes"] = get_all_classes_breakdown(req.vector, DATASET_X, DATASET_Y)
+            response_data["all_classes"] = breakdown
             
         return response_data
     else:
