@@ -10,8 +10,9 @@
 ## Before You Touch Anything
 
 ### Read the codebase first. All of it. This is non-negotiable.
+ 
 
-The project already has:
+The project already has: a
 - A working 32×32 draw grid (`src/capture-tool/`) that saves binary JSON vectors
 - An SVG fetch + binarize script (`src/scripts/fetch_lucide_icons.py`)
 - An augmentation script (`src/scripts/augment_data.py`)
