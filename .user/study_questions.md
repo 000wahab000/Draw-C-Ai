@@ -93,4 +93,208 @@
 
 ---
 
+## Section 8: Embeddings + ResNet + KNN (Implementation Study)
+
+> This section is specifically about HOW the code works. Read the annotated
+> code block below each question before answering. The goal is that you can
+> explain every single line to someone else.
+
+---
+
+### Part A — What IS ResNet? (Concept)
+
+53. A "neural network" is made of layers stacked on top of each other. ResNet
+    is just a CNN — it has convolutional layers. The twist is "residual
+    connections." In one sentence, what problem do residual connections solve?
+    (Hint: think about what happens to gradients in a very deep network.)
+
+54. ResNet-18 means "18 layers deep." ResNet-50 means 50 layers. For our tiny
+    8-class drawing problem, which should we use and why? Think about how many
+    training samples we have.
+
+55. ResNet was trained on **ImageNet**: 1.2 million photos (dogs, cars, planes,
+    furniture). Our data is hand-drawn doodles on a white canvas. Name one
+    thing ResNet has already learned from ImageNet that is USEFUL for our task.
+    Name one thing it learned that is USELESS.
+
+56. When we use ResNet for embeddings, we **remove the last layer** (called the
+    "classification head"). After removing it, what does the network output
+    instead of class probabilities? What shape is that output for ResNet-18?
+
+---
+
+### Part B — What IS an Embedding? (Concept)
+
+57. ResNet-18's final layer (before we remove the head) outputs a vector of
+    **512 numbers**. Our raw pixel vector is **1,024 numbers**. The embedding
+    is actually SMALLER. Why is a smaller, learned vector better than a larger
+    raw vector?
+
+58. Two drawings of an X — one thick, one thin. In raw pixel space (1,024
+    dims), their Euclidean distance might be 180.0. In embedding space (512
+    dims), their distance might be 8.3. Why does the embedding bring them
+    closer? What has ResNet "understood" that pixel math cannot?
+
+59. An embedding is sometimes called a "feature vector." What does "feature"
+    mean in this context? Give 2 concrete examples of features that ResNet's
+    embedding might encode for a drawing of an X.
+
+---
+
+### Part C — The Code (Line by Line)
+
+Read this code carefully. Every line is annotated. Your job is to answer the
+questions below WITHOUT looking them up — use only the annotations and what
+you now know.
+
+```python
+# ─── knn_embedding.py ─────────────────────────────────────────────────────────
+import torch                         # PyTorch: the framework that runs neural nets
+import torchvision.models as models  # Pre-trained model zoo (ResNet lives here)
+import torchvision.transforms as T   # Tools to resize/normalise images before feeding them
+from PIL import Image                # Opens image files (.png, .jpg, etc.)
+import numpy as np
+
+# ── STEP 1: Load a pre-trained ResNet-18 ─────────────────────────────────────
+#
+# weights=IMAGENET1K_V1 means: "give me the weights that were learned on
+# ImageNet." Without this, the weights are random and the network is useless.
+backbone = models.resnet18(weights=models.ResNet18_Weights.IMAGENET1K_V1)
+
+# ── STEP 2: Remove the classification head ───────────────────────────────────
+#
+# backbone.fc is the "fully connected" final layer. It normally outputs 1,000
+# numbers (one per ImageNet class). We replace it with nn.Identity() which
+# just passes the input through unchanged. Now the output is the 512-dim
+# embedding vector instead of 1,000 class probabilities.
+backbone.fc = torch.nn.Identity()
+
+# ── STEP 3: Set to evaluation mode ───────────────────────────────────────────
+#
+# .eval() turns off Dropout and BatchNorm training behavior.
+# If you forget this, you'll get different embeddings every run (non-deterministic).
+backbone.eval()
+
+# ── STEP 4: Define the image pre-processing pipeline ─────────────────────────
+#
+# ResNet was trained on images that were:
+#   - Resized to 224×224 pixels
+#   - Converted to a tensor (a 3D array: [channels, height, width])
+#   - Normalised with specific mean/std values (these exact numbers come from ImageNet)
+# We MUST apply the exact same transforms. Otherwise we're feeding the network
+# a different "language" than it was trained on.
+transform = T.Compose([
+    T.Resize((224, 224)),       # Resize our 32×32 canvas to 224×224
+    T.ToTensor(),               # PIL Image → PyTorch tensor, also scales 0-255 → 0.0-1.0
+    T.Normalize(                # Subtract ImageNet mean, divide by ImageNet std
+        mean=[0.485, 0.456, 0.406],
+        std=[0.229, 0.224, 0.225]
+    ),
+])
+
+def get_embedding(image_path: str) -> np.ndarray:
+    """
+    Given a path to a PNG, returns a 512-dimensional embedding vector.
+    This is a DROP-IN REPLACEMENT for the raw pixel vector.
+    """
+    # Open the image and convert to RGB.
+    # Our canvas is likely saved as grayscale (L) or RGBA.
+    # ResNet expects 3 channels (R, G, B), so .convert("RGB") ensures that.
+    img = Image.open(image_path).convert("RGB")
+
+    # Apply the transforms defined above. Shape becomes [3, 224, 224].
+    tensor = transform(img)
+
+    # PyTorch expects a batch dimension. .unsqueeze(0) adds it.
+    # Shape goes from [3, 224, 224] → [1, 3, 224, 224]
+    # (batch_size=1, channels=3, height=224, width=224)
+    tensor = tensor.unsqueeze(0)
+
+    # torch.no_grad() tells PyTorch: "don't track gradients."
+    # We're not training, so this saves memory and makes it faster.
+    with torch.no_grad():
+        embedding = backbone(tensor)  # Shape: [1, 512]
+
+    # .squeeze() removes the batch dimension: [1, 512] → [512]
+    # .numpy() converts from PyTorch tensor to a regular numpy array
+    return embedding.squeeze().numpy()  # Shape: (512,)
+
+
+# ── STEP 5: Build your embedding dataset ─────────────────────────────────────
+#
+# Instead of storing raw 1,024-pixel vectors, we store 512-dim embeddings.
+# The rest of knn_pixel.py works EXACTLY the same — you just swap the vectors.
+
+def build_embedding_dataset(image_paths: list, labels: list):
+    """
+    Takes a list of image file paths and their labels.
+    Returns X (embeddings) and y (labels) — same format as load_dataset().
+    """
+    X = np.array([get_embedding(p) for p in image_paths])  # shape: [N, 512]
+    y = labels
+    return X, y
+
+
+# ── STEP 6: Predict — this is IDENTICAL to your current KNN ──────────────────
+#
+# The predict() function in knn_pixel.py takes X and a query vector.
+# We just pass it embeddings instead of pixels. That's the entire change.
+#
+# from knn_pixel import predict
+#
+# query_embedding = get_embedding("path/to/user_drawing.png")
+# results = predict(query_embedding, X_embeddings, y_labels, k=5)
+```
+
+---
+
+### Questions About the Code
+
+60. Line: `backbone.fc = torch.nn.Identity()` — What would happen if you
+    FORGOT to do this and left the original `fc` layer in place? What would
+    `get_embedding()` return instead of a 512-dim vector?
+
+61. Line: `backbone.eval()` — We are not training the network. What does
+    `.eval()` actually change at runtime? Name the two layers it affects.
+
+62. The `transform` pipeline resizes our 32×32 image to 224×224. We are making
+    the image BIGGER (upscaling). Is this normally a good idea? Why do we do
+    it here anyway?
+
+63. `T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])` —
+    These specific numbers are non-negotiable. Where do they come from? What
+    breaks if you use different numbers?
+
+64. `tensor.unsqueeze(0)` — Why does PyTorch want a batch dimension even when
+    we are only processing ONE image?
+
+65. `with torch.no_grad():` — If you removed this line, the code would still
+    work and give the same output. So why include it?
+
+66. The final function `build_embedding_dataset()` returns `X` of shape
+    `[N, 512]`. Your current `predict()` in `knn_pixel.py` expects `X` of
+    shape `[N, 1024]`. Do you need to change `predict()` to make it work with
+    embeddings? Why or why not?
+
+67. Right now `predict()` uses Euclidean distance. For embeddings, Cosine
+    distance is often better. Describe in one sentence what Cosine distance
+    measures that Euclidean distance does not.
+
+---
+
+### Part D — Putting It All Together
+
+68. Describe in your own words the complete pipeline from "user finishes
+    drawing on canvas" to "model returns a prediction" when using embeddings
+    (not raw pixels). List every step.
+
+69. We have 80 augmented samples (8 classes × 10 each). Each is a PNG.
+    Building embeddings requires running each PNG through ResNet. How many
+    "forward passes" through ResNet does `build_embedding_dataset()` perform?
+
+70. Once the embeddings are built, do we need ResNet at inference time (when
+    a user draws something)? Justify your answer.
+
+---
+
 *Write your answers below each question. Don't look up answers before attempting. Wrong answers are fine — write them down anyway.*

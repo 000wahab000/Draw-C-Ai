@@ -22,3 +22,75 @@
 **Concept: Clustering vs. Individual Neighbors**
 - When calculating confidence percentages across 8 classes, comparing the drawing to every single augmented sample (80 total) creates too much "background noise," dragging the highest confidence scores down (e.g., to ~9%).
 - **The Solution:** We group the 10 augmented samples of an 'X' into a single cluster and calculate its mathematical center (`np.mean`). By measuring the distance to just the 8 class **Centroids**, we isolate the signal from the noise, resulting in a significantly cleaner and more accurate percentage breakdown.
+
+---
+
+## Phase 3: Embeddings, ResNet & Transfer Learning
+**Date: 2026-08-12 | Time: ~04:25 IST**
+
+### Concept: What is an Embedding?
+- A raw pixel vector is 1,024 numbers that say "pixel 7 is black" — no concept of meaning.
+- An embedding is a smaller, **learned** vector (512 numbers for ResNet-18) where each number encodes a meaningful visual property: diagonal line presence, symmetry, closed shapes, crossing lines.
+- **Key insight:** Two drawings of an X — one thick, one thin — have high Euclidean distance in pixel space (~180) but low distance in embedding space (~8) because ResNet encodes *the concept* (crossing diagonals), not the pixels.
+
+### Concept: ResNet & Transfer Learning
+- **ResNet** = Residual Network. A CNN family trained on ImageNet (1.2M photos, 1,000 categories).
+- **Residual connections:** Each layer outputs `Layer(x) + x`. The `+ x` skip gives gradients a direct highway backward, preventing vanishing gradients in deep networks.
+- **ResNet variants:** 18, 34, 50, 101, 152 layers. For 80 training samples → **ResNet-18** is the right choice (smallest, fast, avoids overfitting).
+- **Architecture vs. Weights:** Architecture = blueprint (layer structure). Weights = learned numbers from training. `IMAGENET1K_V1` loads the *weights*, which carry all the visual knowledge.
+
+### Concept: Using ResNet as a Feature Extractor
+- ResNet normally ends with: `[512-dim vector] → [fc layer] → [1000 class scores]`
+- We replace `backbone.fc` with `torch.nn.Identity()` — this removes the ImageNet classification head and exposes the raw 512-dim embedding.
+- `.eval()` turns off Dropout and BatchNorm randomness, making embeddings **deterministic** (same input = same output every time).
+- `torch.no_grad()` skips building the gradient graph — we're not training, so this saves memory and speeds up inference.
+
+### Concept: Inference vs. Training
+- **Training:** model adjusts its weights to reduce error. Dropout is active. BatchNorm uses batch stats.
+- **Inference:** weights are frozen. You're just asking "what is this?". `.eval()` must be called to switch mode.
+- **Deterministic** = same input → same output every run. Without `.eval()`, Dropout randomly drops neurons and produces different embeddings each run.
+
+### Concept: Image Preprocessing for ResNet
+- ResNet was trained on 224×224 RGB images normalized with ImageNet mean/std.
+- We must apply the **exact same transforms** — different preprocessing = different "language" = garbage embeddings.
+- `T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])` — these numbers come from ImageNet's pixel statistics per channel. Formula: `(pixel - mean) / std`.
+- Result is NOT 0–1, it's roughly -2 to +2 — that's what ResNet expects.
+- `.unsqueeze(0)` adds a batch dimension: `[3, 224, 224]` → `[1, 3, 224, 224]` because PyTorch always expects `[batch, channels, height, width]`.
+
+### Concept: RGB vs RGBA
+- R, G, B = Red, Green, Blue channels.
+- A = Alpha = Transparency (0 = invisible, 255 = solid). PNG files support RGBA.
+- ResNet needs exactly 3 channels. `.convert("RGB")` safely drops the A channel.
+
+### Concept: Drop-in Replacement Architecture
+- `build_embedding_dataset()` returns `X` of shape `[N, 512]` and `y` labels — **same interface** as `knn_pixel.load_dataset()`.
+- `predict()` and `get_all_classes_breakdown()` in `knn_pixel.py` require **zero changes** — they just do distance math on whatever vectors they receive.
+- Embeddings are just better vectors. The KNN math is identical.
+
+### Files created this phase
+- `KNN/knn_embedding.py` — ResNet-18 feature extractor, fully annotated line-by-line.
+- `KNN/test_knn_embedding.py` — leave-one-out cross validation comparing pixel vs embedding KNN.
+
+### Experimental Results (2026-08-12 | ~04:55 IST)
+Leave-one-out cross validation on 72 augmented samples (8 classes × 9 each):
+
+| Method | Accuracy |
+|---|---|
+| Pixel KNN (1024-dim) | 69.4% (50/72) |
+| Embedding KNN (512-dim, ResNet-18) | **87.5% (63/72)** |
+| **Delta** | **+18.1%** |
+
+Per-class results:
+
+| Class | Pixel | Embedding | Δ |
+|---|---|---|---|
+| fire | 67% | 100% | +33% |
+| heart | 89% | 89% | = |
+| smile | 44% | 78% | +34% |
+| square | 78% | 78% | = |
+| thumbs_up | 67% | 100% | +33% |
+| triangle | 56% | 78% | +22% |
+| x | 100% | 100% | = |
+| zap | 56% | 78% | +22% |
+
+**Conclusion:** ResNet embeddings, despite being trained on photographs (not drawings), boosted accuracy by 18 percentage points. The classes that suffered most from pixel-level sensitivity (smile, fire, triangle, zap) showed the largest gains. This experimentally confirms the embedding theory: learned features beat raw pixel comparisons for hand-drawn icon recognition.
