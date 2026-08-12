@@ -12,6 +12,10 @@ const classSelect = document.getElementById('class-select');
 const statusDiv = document.getElementById('status');
 const predictBtn = document.getElementById('predict-btn');
 const predictionResult = document.getElementById('prediction-result');
+const breakdownSection = document.getElementById('breakdown-section');
+const breakdownBtn = document.getElementById('breakdown-btn');
+const breakdownResult = document.getElementById('breakdown-result');
+const modeSelect = document.getElementById('mode-select');
 
 // Our logical grid size is 32x32.
 // Since our canvas is visually 320x320, each logical pixel is visually 10x10.
@@ -157,18 +161,16 @@ saveBtn.addEventListener('click', () => {
     setTimeout(clearCanvas, 1000);
 });
 
-const breakdownSection = document.getElementById('breakdown-section');
-const breakdownBtn = document.getElementById('breakdown-btn');
-const breakdownResult = document.getElementById('breakdown-result');
 
 predictBtn.addEventListener('click', async () => {
     const flattenedVector = gridData.flat();
+    const mode = modeSelect.value;
     
-    predictionResult.innerText = "Predicting...";
-    predictionResult.style.color = "blue";
+    predictionResult.innerText = mode === 'embedding_knn' ? 'Predicting (ResNet running...)' : 'Predicting...';
+    predictionResult.style.color = 'blue';
     breakdownSection.style.display = 'none';
     breakdownResult.innerHTML = '';
-    breakdownBtn.style.display = 'inline-block'; // HF-1 fix: reset the button display
+    breakdownBtn.style.display = 'inline-block';
     
     try {
         const response = await fetch("http://localhost:8000/predict", {
@@ -178,7 +180,7 @@ predictBtn.addEventListener('click', async () => {
             },
             body: JSON.stringify({
                 vector: flattenedVector,
-                mode: "pixel_knn",
+                mode: mode,
                 include_all_classes: false
             })
         });
@@ -191,7 +193,7 @@ predictBtn.addEventListener('click', async () => {
             predictionResult.innerText = `Error: ${data.error}`;
             predictionResult.style.color = "red";
         } else {
-            predictionResult.innerText = `Prediction: ${data.label} (Conf: ${(data.confidence * 100).toFixed(1)}%) in ${data.inference_ms}ms`;
+            predictionResult.innerText = `[${mode}] ${data.label} (${(data.confidence * 100).toFixed(1)}%) in ${data.inference_ms}ms`;
             predictionResult.style.color = "green";
             breakdownSection.style.display = 'block';
         }
@@ -212,7 +214,7 @@ breakdownBtn.addEventListener('click', async () => {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 vector: flattenedVector,
-                mode: "pixel_knn",
+                mode: modeSelect.value,
                 include_all_classes: true
             })
         });

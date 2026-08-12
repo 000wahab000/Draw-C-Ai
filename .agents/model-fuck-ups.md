@@ -123,3 +123,25 @@ The code itself was **always working** — the terminal ran it with zero errors.
 - On Windows with spaces in project path: always use `${workspaceFolder}` in `.vscode/settings.json`, never hardcoded absolute paths.
 - Verify actual functionality via terminal before assuming IDE errors mean broken code.
 - File to check/create: `.vscode/settings.json` at project root.
+
+---
+
+## Incident #4
+
+**Date**: 2026-08-12 | Time: ~19:06 IST
+**Category**: Model Scope Creep / Not Listening
+
+### What was asked
+User said: "I haven't tested it live yet" and "turn on the API." They want to test the prediction in the **capture tool** — the draw canvas they built. That's the whole point of having a capture tool.
+
+### What was done instead
+Model started the API (correct) then ended the response by suggesting: "To also test embedding mode, you can hit the Swagger UI directly: http://localhost:8000/docs." The user never asked for Swagger UI. The user's workflow is the capture tool, always has been.
+
+### Why it's wrong
+The capture tool IS the test interface for this project. Suggesting Swagger UI is offloading work back to the user and ignoring the established workflow. If the capture tool doesn't support a mode, the fix is to add it to the capture tool — not to suggest an alternative interface.
+
+### What should have happened
+Add a mode dropdown to the capture tool UI (pixel_knn vs embedding_knn), restart the API, and tell the user to draw something and click Predict.
+
+### Lesson
+**The capture tool is the live test interface. Always.** If a new mode is added to the API, wire it into the capture tool before calling it done. Never suggest Swagger UI or curl as the test method — those are debugging tools, not the product.

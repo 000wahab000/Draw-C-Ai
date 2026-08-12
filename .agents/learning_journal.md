@@ -94,3 +94,26 @@ Per-class results:
 | zap | 56% | 78% | +22% |
 
 **Conclusion:** ResNet embeddings, despite being trained on photographs (not drawings), boosted accuracy by 18 percentage points. The classes that suffered most from pixel-level sensitivity (smile, fire, triangle, zap) showed the largest gains. This experimentally confirms the embedding theory: learned features beat raw pixel comparisons for hand-drawn icon recognition.
+
+---
+
+## Live Test Finding — Distribution Mismatch
+**Date: 2026-08-12 | Time: ~19:30 IST**
+
+### What happened
+The embedding KNN scored 87.5% in leave-one-out testing but performed near-randomly (~15% per class) in the live capture tool.
+
+### Root cause: Train/Test Distribution Mismatch
+- **Training data:** Thin, clean, 1-2px wide lines from programmatic Lucide SVG icons rendered to 32x32.
+- **Live input:** Thick, blocky, 3-4px wide strokes drawn by hand with a mouse on the canvas.
+
+To ResNet, these look like completely different images — even though a human would call both "an X."
+
+### Key lesson
+**Lab accuracy is meaningless if your test distribution doesn't match real-world input.** 87.5% on a dataset of programmatic icons tells you nothing about how it performs on hand-drawn inputs. This is called **covariate shift** — the input distribution changes between training and deployment.
+
+### What this means for CNN (Phase 4)
+The CNN will have the same problem if it's trained only on thin programmatic icons. The fix is training data that actually looks like user drawings — thicker strokes, imperfect lines, different entry points. This is why Steps.md Phase 3 calls for stylized variants and augmentation BEFORE training the CNN.
+
+### Common misconception caught
+"KNN can't identify shapes" — **Wrong.** KNN identified shapes at 87.5% accuracy when train and test came from the same distribution. The failure was data, not the algorithm.

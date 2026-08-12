@@ -32,6 +32,15 @@
             <p class="hint">Canvas is visually 320x320, but logically 32x32.</p>
         </div>
 
+        <!-- Mode selector -->
+        <div class="controls" style="margin-top: 10px;">
+            <label for="mode-select">Predict Mode:</label>
+            <select id="mode-select">
+                <option value="pixel_knn">Pixel KNN (baseline)</option>
+                <option value="embedding_knn">Embedding KNN (ResNet-18)</option>
+            </select>
+        </div>
+
         <!-- Action Buttons -->
         <div class="actions">
             <button id="clear-btn" class="btn">Clear Canvas</button>
