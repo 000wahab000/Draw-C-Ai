@@ -298,3 +298,122 @@ def build_embedding_dataset(image_paths: list, labels: list):
 ---
 
 *Write your answers below each question. Don't look up answers before attempting. Wrong answers are fine — write them down anyway.*
+
+---
+
+## Section 9: CNN Pre-Implementation — Answer Before You Build
+
+> You are about to build a CNN for this exact project: 8 classes, 32×32 binary
+> drawings, ~80 training samples per class. Answer these before touching a
+> single line of training code. If you cannot answer them, you don't understand
+> what you're building yet.
+
+---
+
+### Part A — What a CNN Actually Does
+
+71. A convolution "slides" something over an image. What is it sliding, and
+    what does it produce at each position? Answer without using the word
+    "filter" or "kernel."
+
+72. Our image is 32×32 = 1,024 pixels. After one convolutional layer with a
+    3×3 sliding window (no padding), how many positions does the window visit?
+    Calculate it exactly.
+
+73. KNN compared your drawing to stored drawings pixel-by-pixel. A CNN does
+    NOT do this. In one sentence, what does a CNN compare instead?
+
+74. After each conv layer we apply ReLU. What does ReLU do to a negative
+    number? What does it do to a positive number? Why do we need it at all?
+
+75. MaxPooling takes a 2×2 block and keeps only 1 number. Which 1 number?
+    After max-pooling, a 32×32 feature map becomes what size?
+
+---
+
+### Part B — Why Our Specific Architecture
+
+76. The architecture in Steps.md is:
+    ```
+    Conv(1→16, 3×3) → BN → ReLU → MaxPool
+    Conv(16→32, 3×3) → BN → ReLU → MaxPool
+    Flatten → Linear(2048→8) → Softmax
+    ```
+    The first Conv says `1→16`. The `1` is the input channels. Why is it 1
+    and not 3? (Hint: look at our data format.)
+
+77. After both conv+pool blocks, we "Flatten" the output. Before flattening,
+    the tensor is shape `[32, 8, 8]`. After flattening, it is shape `[2048]`.
+    Show where 2048 comes from. Do the arithmetic.
+
+78. The final layer is `Linear(2048→8)`. The `8` is the number of output
+    neurons. Why 8 specifically? What does each of those 8 numbers represent?
+
+79. We use Softmax at the end. What does Softmax guarantee about the 8 output
+    numbers? Concretely: if the raw outputs are [2.1, 0.3, -1.0, ...], what
+    does Softmax do to them?
+
+80. Steps.md says "50 epochs, Adam optimizer, lr=1e-3." What is an epoch?
+    If we have 640 training samples and train for 50 epochs with batch size 32,
+    how many weight updates happen in total? Calculate it.
+
+---
+
+### Part C — Training vs Inference
+
+81. During training, we run the image forward through the network (forward pass)
+    and then backward (backward pass). What happens in the backward pass that
+    does NOT happen in the forward pass?
+
+82. What is a loss function measuring? For our 8-class problem, which specific
+    loss function should we use, and why that one and not Mean Squared Error?
+
+83. We split data into train/val/test. During training, after each epoch, we
+    check the validation loss. What specifically are we checking for, and what
+    do we do if we see it?
+
+84. Overfitting in one concrete example using our project: we have 640 training
+    samples. If after 50 epochs the training accuracy is 99% but validation
+    accuracy is 55%, what has happened? What would you try first to fix it?
+
+85. After training, we run `.eval()` before inference. Name the two things that
+    change when you call `.eval()` on a PyTorch model.
+
+---
+
+### Part D — The Distribution Problem (From What We Just Learned)
+
+86. Our KNN failed live despite 87.5% test accuracy. Before training the CNN,
+    what single change to the training data would most improve live performance?
+    Be specific — not "more data," say what kind.
+
+87. The Steps.md says to use a 70/15/15 train/val/test split, stratified by
+    class. What does "stratified" mean and why does it matter specifically for
+    our 8 classes?
+
+88. Steps.md says "the test set is sacred — never train on it." We currently
+    have no real held-out test set — our "test" was leave-one-out on the same
+    training distribution. What is the consequence of evaluating on data that
+    has the same distribution as training data?
+
+---
+
+### Part E — Google Colab Specifics
+
+89. You said we'll train on Google Colab. Colab gives you a GPU. Our model
+    trains on the CPU by default. What single line of PyTorch code moves the
+    model to GPU, and what single line moves a data batch to GPU?
+
+90. Colab sessions disconnect after ~12 hours of inactivity and all files are
+    lost. Name two things you MUST save to disk (or Google Drive) before the
+    session ends.
+
+91. We will train on Colab but serve predictions from our local FastAPI server.
+    What file format should we save the trained model in so that the local API
+    can load it without needing the full Colab training environment? (See
+    Steps.md Phase 4.)
+
+---
+
+*Answer each before you write any training code. If you can't answer it, that
+is exactly what you need to learn first.*
